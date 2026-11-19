@@ -24,8 +24,12 @@ The app doesn't render every `$...$`. It first guesses whether it's math or just
 - has **`\|`** in it: `$\|A\|_2$`
 - **starts with `{`**: `${n \choose k}$`
 - has a **straight quote** right next to it: `"$x$"`
+- has **a letter, digit or sign glued to a `$`**: `loss$^{1/2}$`, `$x$s`
+- contains **`\#`**: `$\#$`
 
-(Plus a few rarer cases: ends with `+` or `=`, contains `@` or `#`, a letter glued to the `$`…)
+It is just as picky with other delimiters: a simple `\(x\)` shows as "(x)", `$$x$$` in the middle of a sentence stays raw, and so does a `\[...\]` block.
+
+(Plus a few rarer cases: ends with `+` or `=`, contains `@`…)
 
 ## 🔧 What the mod does
 
@@ -40,8 +44,13 @@ When Claude writes a formula the app would show as raw text, the mod changes how
 | `$\\|A\\|$` | `$\Vert A\Vert$` |
 | `"$x$"` | `“$x$”` |
 | a formula over 60 characters | the same formula between `\(` and `\)` |
+| `loss$^{1/2}$`, `$x$s` | the same, with an invisible word joiner (U+2060) between the `$` and the glued character |
+| `$\#$` | `$\char35$` |
+| `\(x\)`, `\(2k\)` | `\({x}\)`, `\({2k}\)` |
+| `the output is $$p_j$$.` | `the output is $p_j$.` |
+| a `\[` … `\]` block | the same block between `$$` lines |
 
-Formulas that already work, code, and prices like $5 are not changed.
+Formulas that already work, code, `$$` blocks, and prices like $5 are not changed. The cases come from [anthropics/claude-code#102139](https://github.com/anthropics/claude-code/issues/102139).
 
 ## ⚖️ Trade-off
 

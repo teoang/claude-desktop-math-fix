@@ -51,3 +51,48 @@ test('display math, code and currency are left alone', async () => {
   expect(c('$$\na $b$\n$$')).toBe('$$\na $b$\n$$')
   expect(c('escaped \\$x$ stays')).toBe('escaped \\$x$ stays')
 })
+
+// Cases from anthropics/claude-code#102139 the mod did not cover before.
+const WJ = '\u2060'
+
+test('a letter, digit or sign glued to a $ gets an invisible word joiner', async () => {
+  expect(app('^{1/2}', `loss${WJ}`, ' y')).toBe(true)
+  expect(c('the loss$^{1/2}$ here')).toBe(`the loss${WJ}$^{1/2}$ here`)
+  expect(c('all $x$s here')).toBe(`all $x$${WJ}s here`)
+  expect(c('so $x$/2 and $x$=y')).toBe(`so $x$${WJ}/2 and $x$${WJ}=y`)
+})
+
+test('simple \\(...\\) formulas get braces', async () => {
+  for (const x of ['x', 'xy', '2k', '1', '0.91', 'M_X', 'f(x)', '(0, 1)', 'x, y', '2\\,k']) {
+    expect(c(`so \\(${x}\\) here`)).toBe(`so \\({${x}}\\) here`)
+  }
+  expect(backslashAccepted('x \\({x}\\) y', 2, 7)).toBe(true)
+  const ok = 'so \\(a^2 + b^2 = c^2\\) and \\(\\lVert x \\rVert_Y \\le M_X\\) here'
+  expect(c(ok)).toBe(ok)
+})
+
+test('$$...$$ inside a sentence becomes inline math', async () => {
+  expect(c('the output is $$p_j$$.')).toBe('the output is $p_j$.')
+  expect(c('- item $$x^2$$ here')).toBe('- item $x^2$ here')
+  expect(c('  $$x^2$$  ')).toBe('  $$x^2$$  ')
+  expect(c('Shell: echo $$ and $$PID')).toBe('Shell: echo $$ and $$PID')
+})
+
+test('\\[...\\] blocks become $$ blocks', async () => {
+  expect(c('a\n\\[\n\\lambda = \\exp(x)\n\\]\nb')).toBe('a\n$$\n\\lambda = \\exp(x)\n$$\nb')
+  expect(c('\\[ x^2 \\]')).toBe('$$\nx^2\n$$')
+  expect(c('  \\[\n  x^2\n  \\]')).toBe('  $$\n  x^2\n  $$')
+  expect(c('\\[\nno end')).toBe('\\[\nno end')
+  expect(c('```\n\\[\nx\n\\]\n```')).toBe('```\n\\[\nx\n\\]\n```')
+})
+
+test('a $$ inside inline code does not open a display block', async () => {
+  const text = '**3. `$$` in a sentence**\n- the output is $$p_j$$.\n- count $3$ and `\\[` too\n\\[\nx^2\n\\]'
+  expect(c(text)).toBe('**3. `$$` in a sentence**\n- the output is $p_j$.\n- count $\\textstyle 3$ and `\\[` too\n$$\nx^2\n$$')
+})
+
+test('\\# becomes \\char35', async () => {
+  expect(app('\\#')).toBe(false)
+  expect(c('count $\\#$ here')).toBe('count $\\char35$ here')
+  expect(c('count $\\#1 + x$ here')).toBe('count $\\char35 1 + x$ here')
+})
