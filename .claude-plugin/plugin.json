@@ -1,0 +1,10 @@
+{
+  "name": "desktop-math-fix",
+  "version": "0.3.0",
+  "description": "Makes inline $...$ LaTeX render reliably in the Claude Code desktop app",
+  "license": "MIT",
+  "author": {
+    "name": "teoang"
+  },
+  "repository": "https://github.com/teoang/claude-desktop-math-fix"
+}

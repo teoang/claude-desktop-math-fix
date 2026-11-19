@@ -1,0 +1,5 @@
+{
+  "name": "claude-desktop-math-fix",
+  "owner": { "name": "teoang" },
+  "plugins": [{ "name": "desktop-math-fix", "source": "./" }]
+}
