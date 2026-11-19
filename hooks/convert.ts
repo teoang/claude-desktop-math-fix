@@ -34,10 +34,27 @@ const DISPLAY_LINE = /^\s*\$\$[^$]+\$\$\s*$/
 const CURLY: Record<string, [string, string]> = { '"': ['“', '”'], "'": ['’', '’'] }
 const WORD_JOINER = '⁠'
 
-// `\|` and `\#` (refused by the app) to `\Vert` and `\char35`, and every run
-// of 4+ letters outside braces and command names wrapped in braces.
+// The `\\` row breaks inside `\begin{...}...\end{...}` (refused by the app)
+// as `\cr`, which KaTeX draws the same there. A `\\` outside an environment,
+// or one followed by `[` (a spacing argument), is left as written.
+function rowBreaks(body: string): string {
+  let depth = 0
+  return body.replace(/\\begin\{|\\end\{|\\./g, (m: string, at: number) => {
+    if (m === '\\begin{') depth++
+    else if (m === '\\end{') depth = Math.max(0, depth - 1)
+    else if (m === '\\\\' && depth > 0 && !/^\s*\[/.test(body.slice(at + 2))) {
+      // `\cr` followed by a letter would read as a longer command name.
+      return /[A-Za-z]/.test(body[at + 2] ?? '') ? '\\cr ' : '\\cr'
+    }
+    return m
+  })
+}
+
+// `\|` and `\#` (refused by the app) to `\Vert` and `\char35`, `\\` inside an
+// environment to `\cr`, and every run of 4+ letters outside braces and
+// command names wrapped in braces.
 export function fixBody(body: string): string {
-  const b = body
+  const b = rowBreaks(body)
     .replace(/\\\|(?=[A-Za-z])/g, '\\Vert ')
     .replace(/\\\|/g, '\\Vert')
     .replace(/\\#(?=\d)/g, '\\char35 ')

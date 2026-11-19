@@ -26,6 +26,7 @@ The app doesn't render every `$...$`. It first guesses whether it's math or just
 - has a **straight quote** right next to it: `"$x$"`
 - has **a letter, digit or sign glued to a `$`**: `loss$^{1/2}$`, `$x$s`
 - contains **`\#`**: `$\#$`
+- contains **`\\`**, even as a matrix row break: `$\begin{pmatrix}a&b\\c&d\end{pmatrix}$`
 
 It is just as picky with other delimiters: a simple `\(x\)` shows as "(x)", `$$x$$` in the middle of a sentence stays raw, and so does a `\[...\]` block.
 
@@ -46,6 +47,7 @@ When Claude writes a formula the app would show as raw text, the mod changes how
 | a formula over 60 characters | the same formula between `\(` and `\)` |
 | `loss$^{1/2}$`, `$x$s` | the same, with an invisible word joiner (U+2060) between the `$` and the glued character |
 | `$\#$` | `$\char35$` |
+| `\\` inside `\begin{...}…\end{...}` | `\cr` |
 | `\(x\)`, `\(2k\)` | `\({x}\)`, `\({2k}\)` |
 | `the output is $$p_j$$.` | `the output is $p_j$.` |
 | a `\[` … `\]` block | the same block between `$$` lines |

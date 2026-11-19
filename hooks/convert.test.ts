@@ -91,6 +91,17 @@ test('a $$ inside inline code does not open a display block', async () => {
   expect(c(text)).toBe('**3. `$$` in a sentence**\n- the output is $p_j$.\n- count $\\textstyle 3$ and `\\[` too\n$$\nx^2\n$$')
 })
 
+test('\\\\ inside an environment becomes \\cr', async () => {
+  const m = '$A=\\begin{pmatrix}2&0\\\\0&1\\\\0&0\\end{pmatrix}$'
+  expect(app(m.slice(1, -1))).toBe(false)
+  expect(c(`so ${m} has rank 2`)).toBe('so $A=\\begin{pmatrix}2&0\\cr0&1\\cr0&0\\end{pmatrix}$ has rank 2')
+  expect(c('so $\\begin{pmatrix}a&b\\\\c&d\\end{pmatrix}$ here')).toBe('so $\\begin{pmatrix}a&b\\cr c&d\\end{pmatrix}$ here')
+  expect(c('so $\\begin{cases}1\\\\ 0\\end{cases}$ here')).toBe('so $\\begin{cases}1\\cr 0\\end{cases}$ here')
+  // Outside an environment, or with a spacing argument: no `\cr`.
+  expect(c('so $a\\\\b$ here')).not.toContain('\\cr')
+  expect(c('so $\\begin{pmatrix}1\\\\[2pt]0\\end{pmatrix}$ here')).not.toContain('\\cr')
+})
+
 test('\\# becomes \\char35', async () => {
   expect(app('\\#')).toBe(false)
   expect(c('count $\\#$ here')).toBe('count $\\char35$ here')
